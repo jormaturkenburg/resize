@@ -1,4 +1,10 @@
-import { Component, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  ViewContainerRef,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { FormBuilder, FormControl } from '@angular/forms';
 import Jimp from 'jimp';
 // import JSZip from 'jszip';
@@ -22,7 +28,7 @@ export class ResizeComponent implements OnInit {
   public processing = false;
   @ViewChild('fileInput', { static: false }) input;
 
-  constructor() {}
+  constructor(private cd: ChangeDetectorRef) {}
   ngOnInit() {}
   public dropHandler(event) {
     // console.log(event);
@@ -41,7 +47,7 @@ export class ResizeComponent implements OnInit {
           const reader = new FileReader();
           reader.onload = e => {
             // file.src = e.target['result'];
-            let src = e.target['result'];
+            const src = e.target['result'] as string;
             Jimp.read(src).then(img => {
               // console.log(img.bitmap);
               // file.bitmap = img.bitmap;
@@ -83,7 +89,6 @@ export class ResizeComponent implements OnInit {
     event.preventDefault();
   }
   public clickHandler(event) {
-    // <button onclick="document.getElementById('file-input').click();">Open</button>
     this.input.nativeElement.click();
   }
   public widthChanged() {
@@ -123,107 +128,104 @@ export class ResizeComponent implements OnInit {
     });
   }
   public doTheBusiness() {
+    // The please wait overlay depends on processing being true, for some reason
+    // the overlay only actually shows up sometimes. I have tried kicking off CD manually,
+    // setting a timeout and logging. None worked...
     this.processing = true;
     // this.cd.detectChanges();
-    // Why this is necessary... I don't know
-    // without the timeout the processing overlay
-    // never appears.
-    setTimeout(() => {
-      // let newImages =
-      // console.log(parseInt(this.width.value, 10));
-      if (this.crop.value === 'none') {
-        if (this.width.value) {
-          this.images.map(image => {
-            image.img.resize(parseInt(this.width.value, 10), Jimp.AUTO);
-          });
-        }
-        if (this.height.value) {
-          this.images.map(image => {
-            image.img.resize(Jimp.AUTO, parseInt(this.height.value, 10));
-          });
-        }
-        // this.processing = false;
-      } else {
+    // setTimeout(() => {
+    if (this.crop.value === 'none') {
+      if (this.width.value) {
         this.images.map(image => {
-          if (image.img.bitmap.width > image.img.bitmap.height) {
-            // Landscape
-            image.img.resize(
-              Jimp.AUTO,
-              parseInt(this.width.value || this.height.value, 10),
-            );
-            switch (this.crop.value) {
-              case 'none':
-                break;
-              case 'left':
-                image.img.crop(
-                  0,
-                  0,
-                  this.width.value || this.height.value,
-                  this.width.value || this.height.value,
-                );
-                break;
-              case 'center':
-                image.img.crop(
-                  (image.img.bitmap.width -
-                    (this.width.value || this.height.value)) /
-                    2,
-                  0,
-                  this.width.value || this.height.value,
-                  this.width.value || this.height.value,
-                );
-                break;
-              case 'right':
-                image.img.crop(
-                  image.img.bitmap.width -
-                    (this.width.value || this.height.value),
-                  0,
-                  this.width.value || this.height.value,
-                  this.width.value || this.height.value,
-                );
-                break;
-            }
-          } else {
-            // Portrait
-            image.img.resize(
-              parseInt(this.width.value || this.height.value, 10),
-              Jimp.AUTO,
-            );
-            switch (this.crop.value) {
-              case 'none':
-                break;
-              case 'left':
-                image.img.crop(
-                  0,
-                  0,
-                  this.width.value || this.height.value,
-                  this.width.value || this.height.value,
-                );
-                break;
-              case 'center':
-                image.img.crop(
-                  0,
-                  (image.img.bitmap.height -
-                    (this.width.value || this.height.value)) /
-                    2,
-                  this.width.value || this.height.value,
-                  this.width.value || this.height.value,
-                );
-                break;
-              case 'right':
-                image.img.crop(
-                  0,
-                  image.img.bitmap.height -
-                    (this.width.value || this.height.value),
-                  this.width.value || this.height.value,
-                  this.width.value || this.height.value,
-                );
-                break;
-            }
-          }
+          image.img.resize(parseInt(this.width.value, 10), Jimp.AUTO);
         });
       }
-      this.getNewSources();
-    }, 1);
+      if (this.height.value) {
+        this.images.map(image => {
+          image.img.resize(Jimp.AUTO, parseInt(this.height.value, 10));
+        });
+      }
+    } else {
+      this.images.map(image => {
+        if (image.img.bitmap.width > image.img.bitmap.height) {
+          // Landscape
+          image.img.resize(
+            Jimp.AUTO,
+            parseInt(this.width.value || this.height.value, 10),
+          );
+          switch (this.crop.value) {
+            case 'none':
+              break;
+            case 'left':
+              image.img.crop(
+                0,
+                0,
+                this.width.value || this.height.value,
+                this.width.value || this.height.value,
+              );
+              break;
+            case 'center':
+              image.img.crop(
+                (image.img.bitmap.width -
+                  (this.width.value || this.height.value)) /
+                  2,
+                0,
+                this.width.value || this.height.value,
+                this.width.value || this.height.value,
+              );
+              break;
+            case 'right':
+              image.img.crop(
+                image.img.bitmap.width -
+                  (this.width.value || this.height.value),
+                0,
+                this.width.value || this.height.value,
+                this.width.value || this.height.value,
+              );
+              break;
+          }
+        } else {
+          // Portrait
+          image.img.resize(
+            parseInt(this.width.value || this.height.value, 10),
+            Jimp.AUTO,
+          );
+          switch (this.crop.value) {
+            case 'none':
+              break;
+            case 'left':
+              image.img.crop(
+                0,
+                0,
+                this.width.value || this.height.value,
+                this.width.value || this.height.value,
+              );
+              break;
+            case 'center':
+              image.img.crop(
+                0,
+                (image.img.bitmap.height -
+                  (this.width.value || this.height.value)) /
+                  2,
+                this.width.value || this.height.value,
+                this.width.value || this.height.value,
+              );
+              break;
+            case 'right':
+              image.img.crop(
+                0,
+                image.img.bitmap.height -
+                  (this.width.value || this.height.value),
+                this.width.value || this.height.value,
+                this.width.value || this.height.value,
+              );
+              break;
+          }
+        }
+      });
+    }
+    // }, 1000);
+    this.getNewSources();
   }
   public download() {
     if (this.images.length > 1) {
