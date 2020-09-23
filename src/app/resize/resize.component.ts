@@ -40,21 +40,21 @@ export class ResizeComponent implements OnInit {
     // console.log(this.files);
     this.images = [];
     this.notImages = [];
-    let promises = Object.keys(this.files).map(key => {
+    let promises = Object.keys(this.files).map((key) => {
       const promise = new Promise((resolve, reject) => {
         const file = this.files[key];
         if (file.type === 'image/jpeg' || file.type === 'image/png') {
           const reader = new FileReader();
-          reader.onload = e => {
+          reader.onload = (e) => {
             // file.src = e.target['result'];
             const src = e.target['result'] as string;
-            Jimp.read(src).then(img => {
+            Jimp.read(src).then((img) => {
               // console.log(img.bitmap);
               // file.bitmap = img.bitmap;
               file.img = img;
               file.width = img.bitmap.width;
               file.height = img.bitmap.height;
-              img.getBase64Async(file.type).then(url => {
+              img.getBase64Async(file.type).then((url) => {
                 file.src = url;
                 file.newSrc = url;
                 resolve();
@@ -77,7 +77,7 @@ export class ResizeComponent implements OnInit {
       this.error = `The following file: ${this.notImages[0].name} is not a JPEG or PNG image file.`;
     } else if (this.notImages.length > 1) {
       this.error = `The following files: ${this.notImages
-        .map(file => file.name)
+        .map((file) => file.name)
         .join(', ')} are not JPEG or PNG image files.`;
     } else {
       this.error = null;
@@ -102,8 +102,8 @@ export class ResizeComponent implements OnInit {
   }
   public getNewSources() {
     this.processing = true;
-    let promises = this.images.map(file => {
-      return file.img.getBase64Async(file.type).then(url => {
+    let promises = this.images.map((file) => {
+      return file.img.getBase64Async(file.type).then((url) => {
         file.newSrc = url;
       });
     });
@@ -113,12 +113,12 @@ export class ResizeComponent implements OnInit {
   }
   public reset() {
     this.processing = true;
-    let promises = this.images.map(file => {
-      return Jimp.read(file.src).then(img => {
+    let promises = this.images.map((file) => {
+      return Jimp.read(file.src).then((img) => {
         file.img = img;
         file.width = img.bitmap.width;
         file.height = img.bitmap.height;
-        return img.getBase64Async(file.type).then(url => {
+        return img.getBase64Async(file.type).then((url) => {
           file.newSrc = url;
         });
       });
@@ -136,17 +136,17 @@ export class ResizeComponent implements OnInit {
     // setTimeout(() => {
     if (this.crop.value === 'none') {
       if (this.width.value) {
-        this.images.map(image => {
+        this.images.map((image) => {
           image.img.resize(parseInt(this.width.value, 10), Jimp.AUTO);
         });
       }
       if (this.height.value) {
-        this.images.map(image => {
+        this.images.map((image) => {
           image.img.resize(Jimp.AUTO, parseInt(this.height.value, 10));
         });
       }
     } else {
-      this.images.map(image => {
+      this.images.map((image) => {
         if (image.img.bitmap.width > image.img.bitmap.height) {
           // Landscape
           image.img.resize(
@@ -230,8 +230,8 @@ export class ResizeComponent implements OnInit {
   public download() {
     if (this.images.length > 1) {
       let zip = new JSZip();
-      let promises = this.images.map(image => {
-        return image.img.getBufferAsync(image.type).then(buffer => {
+      let promises = this.images.map((image) => {
+        return image.img.getBufferAsync(image.type).then((buffer) => {
           zip.file(image.name, buffer, { binary: true });
           console.log(buffer);
         });
@@ -245,12 +245,12 @@ export class ResizeComponent implements OnInit {
           console.log('All done');
           return zip.generateAsync({ type: 'blob' });
         })
-        .then(zipBlob => {
+        .then((zipBlob) => {
           saveAs(zipBlob, 'images.zip');
         });
     } else {
       let image = this.images[0];
-      image.img.getBase64Async(image.type).then(url => {
+      image.img.getBase64Async(image.type).then((url) => {
         saveAs(url, image.name);
       });
     }
